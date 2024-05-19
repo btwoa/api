@@ -1,11 +1,15 @@
 <?php
+
+// 设置允许所有来源的请求
 header("Access-Control-Allow-Origin: *");
 
+// 设置API密钥和网站ID
 $apiKey = 'aGs7KPLYElUrI8SqzSG4YL9LGb6BBFm3';
 $secretKey = 'ezswAvaBKiKgdxCck7YC7kFhsm7ROa6n';
 $siteId = '18376956';
-$code = '126e8607030f6e176496cd234a7e2f8e';
+$code = 'd85593dae19e26265ad5c52b6f638953';
 
+// 通过授权码获取Access Token函数
 function getAccessToken($apiKey, $secretKey, $code) {
     $url = "https://openapi.baidu.com/oauth/2.0/token";
     $params = array(
@@ -26,6 +30,7 @@ function getAccessToken($apiKey, $secretKey, $code) {
     return $data;
 }
 
+// 刷新Access Token函数
 function refreshAccessToken($apiKey, $secretKey, $refreshToken) {
     $url = "https://openapi.baidu.com/oauth/2.0/token";
     $params = array(
@@ -45,6 +50,7 @@ function refreshAccessToken($apiKey, $secretKey, $refreshToken) {
     return $data;
 }
 
+// 持久化存储令牌
 function saveTokens($accessToken, $refreshToken) {
     file_put_contents('tokens.json', json_encode(array(
         'access_token' => $accessToken,
@@ -52,6 +58,7 @@ function saveTokens($accessToken, $refreshToken) {
     )));
 }
 
+// 从文件中加载令牌
 function loadTokens() {
     if (!file_exists('tokens.json')) {
         return null;
@@ -59,6 +66,7 @@ function loadTokens() {
     return json_decode(file_get_contents('tokens.json'), true);
 }
 
+// 检查并刷新令牌
 function checkAndRefreshTokens($apiKey, $secretKey) {
     $tokens = loadTokens();
     if ($tokens === null) {
@@ -72,6 +80,7 @@ function checkAndRefreshTokens($apiKey, $secretKey) {
     return $tokens;
 }
 
+// 定义获取数据的函数
 function getData($startDate, $endDate, $metrics, $accessToken, $siteId) {
     $url = "https://openapi.baidu.com/rest/2.0/tongji/report/getData";
     $params = array(
@@ -93,16 +102,19 @@ function getData($startDate, $endDate, $metrics, $accessToken, $siteId) {
     return json_decode($response, true);
 }
 
+// 定义缓存文件路径
 $cacheFile = 'data_cache.json';
-$cacheTime = 60; 
+$cacheTime = 60; // 缓存时间，单位：秒
 
+// 获取Access Token并刷新令牌
 $tokens = checkAndRefreshTokens($apiKey, $secretKey);
 $accessToken = $tokens['access_token'];
 
+// 检查缓存文件是否存在且未过期
 if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {
     $data = json_decode(file_get_contents($cacheFile), true);
 } else {
-
+    // 准备数据
     $data = array(
         'today_uv' => null,
         'today_pv' => null,
@@ -112,10 +124,12 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {
         'last_year_pv' => null,
     );
 
+    // 获取最近31天的数据
     $startDate = date('Ymd', strtotime('-31 days'));
     $endDate = date('Ymd');
     $monthData = getData($startDate, $endDate, 'pv_count,visitor_count', $accessToken, $siteId);
 
+    // 处理并提取最近31天的数据
     $last31DaysPV = 0;
     if (isset($monthData['result']['items'][1])) {
         $dataPoints = $monthData['result']['items'][1];
@@ -124,10 +138,12 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {
         }
     }
 
+    // 获取一整年的数据
     $startDate = date('Ymd', strtotime('-1 year'));
     $endDate = date('Ymd');
     $yearData = getData($startDate, $endDate, 'pv_count,visitor_count', $accessToken, $siteId);
 
+    // 处理并提取所需数据
     if (isset($yearData['result']['items'][1])) {
         $dataPoints = $yearData['result']['items'][1];
         $today = date('Y/m/d');
@@ -149,11 +165,14 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {
         $data['last_year_pv'] = array_sum(array_column($dataPoints, 0));
     }
 
+    // 添加最近31天的PV总和
     $data['last_month_pv'] = $last31DaysPV;
 
+    // 保存数据到缓存文件
     file_put_contents($cacheFile, json_encode($data));
 }
 
+// 返回JSON数据
 header('Content-Type: application/json');
 echo json_encode($data);
 
