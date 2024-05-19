@@ -1,4 +1,5 @@
 <?php
+ini_set('user_agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
 
 // 设置允许所有来源的请求
 header("Access-Control-Allow-Origin: *");
@@ -7,7 +8,7 @@ header("Access-Control-Allow-Origin: *");
 $apiKey = 'aGs7KPLYElUrI8SqzSG4YL9LGb6BBFm3';
 $secretKey = 'ezswAvaBKiKgdxCck7YC7kFhsm7ROa6n';
 $siteId = '18376956';
-$code = 'e3cbc4177f57c61dd75f623043bae4c5';
+$code = '3aebb43352112c1cb6634d9e69d292e2';
 
 // 通过授权码获取Access Token函数
 function getAccessToken($apiKey, $secretKey, $code) {
