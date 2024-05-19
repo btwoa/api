@@ -7,7 +7,7 @@ header("Access-Control-Allow-Origin: *");
 $apiKey = 'aGs7KPLYElUrI8SqzSG4YL9LGb6BBFm3';
 $secretKey = 'ezswAvaBKiKgdxCck7YC7kFhsm7ROa6n';
 $siteId = '18376956';
-$code = '5c485b0459df9be841d153cdeca849b1';
+$code = 'e3cbc4177f57c61dd75f623043bae4c5';
 
 // 通过授权码获取Access Token函数
 function getAccessToken($apiKey, $secretKey, $code) {
